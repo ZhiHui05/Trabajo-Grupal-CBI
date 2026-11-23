@@ -1,0 +1,8 @@
+captures/
+*.pcap
+*.pcapng
+.git/
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/

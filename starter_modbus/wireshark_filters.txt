@@ -1,0 +1,53 @@
+# Filtros y columnas para Wireshark — laboratorio Modbus/TCP
+# Copia los filtros en la barra de display filter.
+
+# --- Filtros básicos ---
+tcp.port == 502
+modbus
+tcp.stream eq 0
+
+# --- Funciones Modbus ---
+modbus.func_code == 1      # Read Coils
+modbus.func_code == 2      # Read Discrete Inputs
+modbus.func_code == 3      # Read Holding Registers
+modbus.func_code == 4      # Read Input Registers
+modbus.func_code == 5      # Write Single Coil
+modbus.func_code == 6      # Write Single Register
+modbus.func_code == 15     # Write Multiple Coils (0x0F)
+modbus.func_code == 16     # Write Multiple Registers (0x10)
+
+# --- Errores Modbus ---
+modbus.func_code >= 128
+modbus.exception_code
+
+# --- Participantes ---
+ip.addr == 172.28.0.10
+ip.addr == 172.28.0.11
+ip.addr == 172.28.0.66
+
+# --- Tráfico HMI <-> PLC ---
+ip.addr == 172.28.0.10 && ip.addr == 172.28.0.11
+
+# --- Escrituras (posible ataque) ---
+modbus.func_code == 5 || modbus.func_code == 6 || modbus.func_code == 15 || modbus.func_code == 16
+
+# --- Inicio de conexiones TCP ---
+tcp.flags.syn == 1 && tcp.flags.ack == 0
+
+# --- ARP (para MITM) ---
+arp
+
+# --- Columnas recomendadas ---
+# frame.number
+# frame.time_relative
+# ip.src
+# ip.dst
+# tcp.srcport
+# tcp.dstport
+# modbus.func_code
+# modbus.reference_num
+# modbus.word_cnt
+# modbus.regval_uint16
+# modbus.bitval
+# modbus.write_reference_num
+# modbus.exception_code

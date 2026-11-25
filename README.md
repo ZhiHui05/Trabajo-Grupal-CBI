@@ -29,22 +29,24 @@
 │   ├── figuras/
 │   └── build.ps1 / build.sh  # genera la memoria con pandoc
 └── guia/                   # material de apoyo (no se entrega)
-    ├── 00_Guia_Trabajo_Grupo.md
-    └── 02_Checklist_Entrega.md
+    ├── README.md           # índice: qué capítulos lee cada bloque
+    ├── 01_enunciado.md … 17_anexos.md   # un archivo por capítulo
+    └── checklist_entrega.md
 ```
 
 ## Reparto por bloque
 
-Rellenad los nombres. Cada responsable trabaja en su archivo de `informe/secciones/` y abre su propia rama.
+Rellenad los nombres. Cada responsable lee su parte de la guía, escribe en su archivo de `informe/secciones/` y abre su propia rama. Todo el grupo lee antes `guia/01`, `02`, `03` y `13`.
 
-| Bloque | Peso | Archivo | Responsable | Revisor |
-|---|---:|---|---|---|
-| 4.1 Descripción del escenario | 15 % | `02_escenario.md` | [ ] | [ ] |
-| 4.2 Despliegue y análisis del tráfico | 25 % | `03_despliegue.md`, `04_trafico.md` | [ ] | [ ] |
-| 4.3 MITRE ATT&CK for ICS | 35 % | `05_mitre.md` | [ ] | [ ] |
-| 4.4 Impacto sobre el proceso | 25 % | `06_impacto.md` | [ ] | [ ] |
-| 5. Incidente real (voluntaria, máx. 1 página) | 15 % | `08_incidente_real.md` | [ ] | [ ] |
-| Introducción, detección/protección, conclusiones | — | `01_`, `07_`, `09_` | [ ] | [ ] |
+| Bloque | Peso | Leer en `guia/` | Escribir en `informe/secciones/` | Responsable | Revisor |
+|---|---:|---|---|---|---|
+| 4.1 Descripción del escenario | 15 % | `04_escenario.md` | `02_escenario.md` | [ ] | [ ] |
+| 4.2a Laboratorio y capturas | 25 % (con 4.2b) | `05_laboratorio.md`, `06_experimentos.md` | `03_despliegue.md` + `evidencias/` | [ ] | [ ] |
+| 4.2b Análisis del tráfico | — | `07_trafico.md` | `04_trafico.md` | [ ] | [ ] |
+| 4.3 MITRE ATT&CK for ICS | 35 % | `08_mitre.md` | `05_mitre.md` | [ ] | [ ] |
+| 4.4 Impacto sobre el proceso | 25 % | `09_impacto.md` | `06_impacto.md` | [ ] | [ ] |
+| 5. Incidente real (voluntaria, máx. 1 página) | 15 % | `11_incidente_real.md` | `08_incidente_real.md` | [ ] | [ ] |
+| Detección/protección, introducción, conclusiones y montaje final | — | `10_deteccion_proteccion.md`, `12_redaccion_informe.md` | `01_`, `07_`, `09_`, `00_` | [ ] | [ ] |
 
 ## Cómo reproducir el laboratorio
 

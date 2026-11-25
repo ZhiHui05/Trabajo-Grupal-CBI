@@ -451,21 +451,25 @@ En todas ellas, el PLC controla actuadores y el HMI permite supervisar y cambiar
 | Opcional: Scapy | 2.6+ | Manipulación de paquetes y MITM |
 | Opcional: Suricata/Zeek | 7.x/6.x | Detección offline sobre PCAP |
 
-Fija las versiones en `requirements.txt` y en el `Dockerfile`. Un trabajo reproducible no dice “funciona en mi máquina”; dice “con estas versiones y este comando, funciona en cualquier máquina”.
+Fija las dependencias Python en el `requirements.txt` común y las herramientas del sistema en cada
+`Dockerfile`. Un trabajo reproducible no dice “funciona en mi máquina”; dice “con estas versiones y
+este comando, funciona en cualquier máquina”.
 
 ### 5.2. Estructura del repositorio
 
 ```text
 trabajo-cbi/
 ├── README.md                 # Cómo reproducir el laboratorio
-├── compose.yml               # Definición de servicios y red
-├── Dockerfile                # Imagen común
-├── requirements.txt          # Versiones fijadas
-├── plc_server.py             # PLC virtual
-├── hmi_client.py             # HMI/SCADA
-├── attack_write.py           # Escritura no autorizada
-├── capture.sh                # Ayuda de captura
-├── captures/                 # PCAP/PCAPNG (no versionar los grandes)
+├── requirements.txt          # Dependencias Python comunes
+├── modbus_map.py             # Direcciones Modbus compartidas
+├── plc/                      # PLC: Compose, Dockerfile, servidor y modelo
+├── hmi/                      # HMI: Compose, Dockerfile y cliente
+├── capture/                  # Captura: Compose, Dockerfile y utilidad tcpdump
+├── attacker/                 # Atacante: Compose, Dockerfile y cliente
+├── tests/                    # Pruebas unitarias del modelo
+├── docker_composer           # Arranque/parada modular para Linux/macOS
+├── lab.ps1                   # Arranque/parada modular para Windows
+├── capture/captures/         # PCAP/PCAPNG (no versionar los grandes)
 ├── docs/
 │   ├── informe.md            # Borrador de la memoria
 │   ├── figuras/
@@ -479,25 +483,35 @@ trabajo-cbi/
 
 | Host | IP | Puerto | Función |
 |---|---|---|---|
-| PLC | 172.28.0.10 | 502/TCP | Servidor Modbus |
-| HMI | 172.28.0.11 | Efímero | Cliente Modbus |
-| Captura | Comparte red del HMI | — | tcpdump |
-| Atacante | 172.28.0.66 | Efímero | Cliente Modbus / sniffing / ARP |
+| PLC | 172.28.0.10 (predeterminada) | 502/TCP | Servidor Modbus |
+| HMI | 172.28.0.11 (predeterminada) | Efímero | Cliente Modbus |
+| Captura | Comparte red del PLC | — | tcpdump |
+| Atacante | 172.28.0.66 (predeterminada) | Efímero | Cliente Modbus / sniffing / ARP |
 | Host (opcional) | — | 1502 → 502 | Wireshark o `mbtget` desde el equipo anfitrión |
 
 No publiques el puerto 502 en el host salvo que lo necesites. En una planta real, exponer el PLC a la red corporativa o a Internet es una mala práctica; en el laboratorio, la red aislada evita accidentes.
 
-### 5.4. Piezas del `compose.yml`
+### 5.4. Módulos Compose
 
-El archivo completo está en `starter_modbus/compose.yml`. Los elementos que debes saber explicar:
+Cada componente tiene su propio directorio con Compose y Dockerfile: `starter_modbus/plc/`,
+`starter_modbus/hmi/`, `starter_modbus/capture/` y `starter_modbus/attacker/`. El archivo
+`starter_modbus/requirements.txt` es común a los componentes Python; cada imagen instala desde ese
+mismo archivo. `modbus_map.py` evita duplicar direcciones entre PLC, HMI y atacante. Las herramientas
+de sistema se declaran en el Dockerfile del componente que las usa.
 
-- **`build: .`**: una única imagen con Python, PyModbus, tcpdump y utilidades.
-- **`networks.ics_net`**: red bridge con subred `172.28.0.0/24`; IPs fijas para que el informe y las capturas coincidan.
-- **`depends_on` + `healthcheck`**: el HMI espera a que el PLC esté escuchando.
-- **`capture` con `network_mode: "service:hmi"`**: comparte el namespace de red del HMI y ve todo su tráfico. Es útil para la vista del HMI, pero **no ve el tráfico de otros contenedores** (por ejemplo, la escritura del atacante).
-- **Captura en el PLC**: `docker compose exec plc tcpdump ...`. Como todo el tráfico del proceso pasa por el PLC, esta captura ve las peticiones y respuestas del HMI y del atacante. Es la opción recomendada para las evidencias principales.
-- **`attacker` con `NET_ADMIN` y `NET_RAW`**: necesario para tcpdump y, opcionalmente, ARP spoofing.
-- **Volúmenes**: `./:/app` para editar scripts sin reconstruir; `./captures:/captures` para conservar los PCAP.
+- **Red compartida**: los módulos PLC, HMI y atacante usan la red bridge externa `cbi-modbus-ics`.
+  Subred e IPs son configurables mediante `NETWORK_SUBNET`, `PLC_IP`, `HMI_IP` y `ATTACKER_IP`;
+  por defecto se usan `172.28.0.0/24`, `172.28.0.10`, `172.28.0.11` y `172.28.0.66`.
+  Si la red ya existe con otra subred, elimínala antes de cambiar esta configuración.
+- **Orden de arranque**: los scripts `docker_composer up` y `lab.ps1 up` crean la red y levantan
+  los módulos en orden. El HMI espera reintentando hasta que el PLC esté disponible.
+- **Captura**: `capture/compose.yml` comparte el namespace de red del PLC (`cbi-plc`), de modo que
+  ve peticiones y respuestas del HMI y del atacante. Requiere que el PLC ya esté levantado.
+- **Datos**: los PCAP se guardan en `starter_modbus/capture/captures/` y sobreviven a la
+  recreación de los contenedores.
+- **Despliegue individual**: crea primero la red con `docker network create --driver bridge
+  --subnet 172.28.0.0/24 cbi-modbus-ics`; después inicia `plc/compose.yml`, `hmi/compose.yml`,
+  `capture/compose.yml` y `attacker/compose.yml`, según necesites. La captura requiere el PLC.
 
 ### 5.5. El problema del sniffing en Docker (importante)
 
@@ -507,27 +521,26 @@ Opciones válidas:
 
 | Opción | Ventaja | Limitación |
 |---|---|---|
-| **Captura en el PLC** (`tcpdump` dentro del contenedor) | Ve todo el tráfico del proceso: HMI y atacante | Es un punto de observación privilegiado, no un atacante externo; requiere `NET_RAW` |
-| **Sidecar de captura** que comparte el namespace del HMI | Fiable y sencillo; ve todas las peticiones y respuestas del HMI | No ve el tráfico del atacante; es un punto de observación en el endpoint |
+| **Módulo de captura** que comparte el namespace del PLC | Fiable y sencillo; ve las peticiones y respuestas del HMI y del atacante | Es un punto de observación privilegiado |
 | **ARP spoofing** desde el contenedor atacante | Demuestra MITM real; el tráfico pasa por el atacante | Puede fallar según la configuración de Docker; requiere `NET_ADMIN` y forwarding |
 | **Proxy TCP** entre HMI y PLC | Controlado y reproducible; permite ver y modificar | Cambia la topología; el HMI apunta al proxy |
 | **Máquinas virtuales con switch virtual en modo promiscuo** | Se acerca a una red real | Más recursos y configuración |
 
-Recomendación para el trabajo: usar la **captura en el PLC** para la evidencia principal (ve HMI y atacante) y, si se quiere, el **sidecar del HMI** para comparar la vista del operador. Si se quiere demostrar MITM, intentar **ARP spoofing** y documentar el resultado. Si no funciona, describirlo como “técnicamente posible” y usar un proxy o VMs como alternativa. Esta honestidad suma puntos, no resta.
+Recomendación para el trabajo: usar el módulo de captura en el namespace del PLC para la evidencia principal (ve HMI y atacante). Si se quiere demostrar MITM, intentar **ARP spoofing** y documentar el resultado. Si no funciona, describirlo como “técnicamente posible” y usar un proxy o VMs como alternativa. Esta honestidad suma puntos, no resta.
 
 ### 5.6. Arranque y comprobaciones
 
 ```bash
 cd starter_modbus
-docker compose up -d --build
-docker compose ps
-docker compose logs -f plc
+sh docker_composer up
+sh docker_composer status
+docker compose -f plc/compose.yml logs -f plc
 ```
 
 En otra terminal:
 
 ```bash
-docker compose logs -f hmi
+docker compose -f hmi/compose.yml logs -f hmi
 ```
 
 Comprueba:
@@ -535,8 +548,7 @@ Comprueba:
 - [ ] El PLC escucha en 502.
 - [ ] El HMI muestra nivel, temperatura, consigna, bomba, caudal y presión.
 - [ ] El HMI actualiza cada segundo.
-- [ ] El PLC permite ejecutar `tcpdump` (capacidad `NET_RAW`).
-- [ ] El contenedor `capture` está en ejecución (opcional, para la vista del HMI).
+- [ ] El contenedor `capture` está en ejecución (comparte el namespace del PLC y tiene `NET_RAW`).
 - [ ] El atacante puede hacer `ping plc` y conectar al puerto 502.
 - [ ] Los logs no muestran errores de versión ni de conexión.
 
@@ -545,13 +557,14 @@ Comprueba:
 Un compañero o el profesor debería poder ejecutar el laboratorio desde cero. Para ello:
 
 - [ ] `README.md` con requisitos, comandos y solución de problemas.
-- [ ] Versiones fijadas (`pymodbus==3.7.4`, imagen `python:3.12-slim`).
+- [ ] Versiones fijadas (`pymodbus==3.7.4`, imagen `python:3.12-slim` fijada por digest).
+- [ ] Pruebas del modelo ejecutadas con `python -m unittest discover -s tests -v`.
 - [ ] Sin rutas absolutas ni credenciales personales.
 - [ ] `compose.yml` con IPs y puertos documentados.
 - [ ] Scripts con valores por defecto razonables y opciones por línea de comandos.
 - [ ] PCAP de ejemplo y `README` de capturas con comandos y timestamps.
 - [ ] Prueba final en un equipo limpio (o al menos en otro equipo del grupo).
-- [ ] `docker compose down` y `docker compose up` funcionan sin pasos manuales ocultos.
+- [ ] `sh docker_composer down` y `sh docker_composer up` funcionan sin pasos manuales ocultos.
 
 ### 5.8. Alternativa sin Docker
 
@@ -599,11 +612,11 @@ No captures “a ver qué sale”. Captura para responder una pregunta.
 1. Arranca PLC y HMI.
 2. Ejecuta un HMI en modo operación para generar escrituras normales:
    ```bash
-   docker compose exec hmi python hmi_client.py --host plc --operate
+   docker compose -f hmi/compose.yml exec hmi python hmi_client.py --host plc --operate
    ```
 3. En otra terminal, captura:
    ```bash
-   docker compose exec plc tcpdump -i eth0 -s 0 -w /app/captures/01_baseline.pcapng 'tcp port 502'
+   docker compose -f capture/compose.yml exec capture sh /app/capture.sh /captures/01_baseline.pcapng
    ```
 4. Deja funcionar 60–120 s.
 5. Detén la captura con `Ctrl+C` y el HMI en modo operación con `Ctrl+C`.
@@ -631,8 +644,8 @@ No captures “a ver qué sale”. Captura para responder una pregunta.
 
 ```bash
 # Desde el contenedor atacante
-docker compose exec attacker sh -c "nmap -p 502 172.28.0.10 || true"
-docker compose exec attacker python - <<'PY'
+docker compose -f attacker/compose.yml exec attacker sh -c "nmap -p 502 172.28.0.10 || true"
+docker compose -f attacker/compose.yml exec attacker python - <<'PY'
 from pymodbus.client import ModbusTcpClient
 c = ModbusTcpClient("plc", port=502)
 c.connect()
@@ -669,18 +682,18 @@ Si `nmap` no está instalado en la imagen, usa `python` con `socket` o `nc`; no 
 1. Deja el HMI en modo **monitor** (sin `--operate`) para que no revierta la escritura.
 2. Inicia la captura:
    ```bash
-   docker compose exec plc tcpdump -i eth0 -s 0 -w /app/captures/03_escritura_no_autorizada.pcapng 'tcp port 502'
+   docker compose -f capture/compose.yml exec capture sh /app/capture.sh /captures/03_escritura_no_autorizada.pcapng
    ```
 3. Desde el atacante:
    ```bash
-   docker compose exec attacker python attack_write.py --host plc --setpoint 95 --pump on --read
+   docker compose -f attacker/compose.yml exec attacker python attack_write.py --host plc --setpoint 95 --pump on --read
    ```
 4. Observa el HMI: la consigna cambia a 95 %, la bomba se enciende y el nivel sube.
 5. Espera a que el nivel supere el 90 % y se active la alarma.
 6. Detén la captura.
 7. Restaura:
    ```bash
-   docker compose exec attacker python attack_write.py --host plc --setpoint 60 --pump off
+   docker compose -f attacker/compose.yml exec attacker python attack_write.py --host plc --setpoint 60 --pump off
    ```
 
 **Qué esperar:**
@@ -710,7 +723,7 @@ Si `nmap` no está instalado en la imagen, usa `python` con `socket` o `nc`; no 
 
 1. En el atacante, comprueba la tabla ARP:
    ```bash
-   docker compose exec attacker ip neigh
+   docker compose -f attacker/compose.yml exec attacker ip neigh
    ```
 2. Lanza ARP spoofing hacia HMI y PLC (herramientas: `arpspoof` de dsniff, `bettercap` o un script con Scapy). Ejemplo con `arpspoof`:
    ```bash
@@ -754,7 +767,7 @@ Si `nmap` no está instalado en la imagen, usa `python` con `socket` o `nc`; no 
 **Procedimiento:** un flood TCP al puerto 502 o un agotamiento de conexiones. Ejemplo con `hping3` si está instalado:
 
 ```bash
-docker compose exec attacker hping3 -S -p 502 --flood 172.28.0.10
+docker compose -f attacker/compose.yml exec attacker hping3 -S -p 502 --flood 172.28.0.10
 ```
 
 **Precauciones:**
@@ -807,22 +820,21 @@ docker compose exec attacker hping3 -S -p 502 --flood 172.28.0.10
 
 **Dónde capturar:**
 
-- **En el PLC (recomendado):** ve todas las peticiones y respuestas de HMI y atacante, porque todo el tráfico del proceso pasa por él.
-- **En el sidecar `capture` (opcional):** ve solo la vista del HMI; útil para comparar lo que ve el operador, pero no para demostrar la escritura del atacante.
+- **En el módulo `capture` (recomendado):** comparte el namespace del PLC y ve las peticiones y respuestas de HMI y atacante.
 - **En el atacante:** ve su propio tráfico; útil si se hace ARP spoofing o un proxy.
 - **En el host:** solo si se usa una interfaz puente y se sabe exactamente qué se está viendo.
 
 **Comandos:**
 
 ```bash
-# Captura completa del puerto 502 en el PLC (recomendado)
-docker compose exec plc tcpdump -i eth0 -s 0 -w /app/captures/01_baseline.pcapng 'tcp port 502'
+# Captura completa del puerto 502 en el namespace del PLC (recomendado)
+docker compose -f capture/compose.yml exec capture sh /app/capture.sh /captures/01_baseline.pcapng
 
 # Captura desde el atacante (para su propio tráfico)
-docker compose exec attacker tcpdump -i eth0 -s 0 -w /app/captures/04_mitm.pcapng 'tcp port 502 or arp'
+docker compose -f attacker/compose.yml exec attacker tcpdump -i eth0 -s 0 -w /tmp/04_atacante.pcapng 'tcp port 502 or arp'
 
 # Ver el tráfico en vivo
-docker compose exec plc tcpdump -i eth0 -nn -tttt 'tcp port 502'
+docker compose -f capture/compose.yml exec capture tcpdump -i eth0 -nn -tttt 'tcp port 502'
 ```
 
 **Buenas prácticas:**
@@ -1173,11 +1185,11 @@ Evita:
 | **Táctica** | Discovery |
 | **Descripción** | El adversario captura tráfico de red para obtener información del entorno industrial: topología, direcciones, protocolos, valores de proceso, consignas o material de autenticación. |
 | **Condiciones** | Acceso a la red o a un punto de captura; interfaz en modo promiscuo, SPAN/mirror o compromiso de un host; tráfico sin cifrar; capacidad de ejecutar tcpdump/Wireshark. |
-| **Relación con el escenario** | Modbus/TCP viaja en texto claro por el puerto 502. En el laboratorio, la captura en el PLC ve todas las peticiones y respuestas; el sidecar del HMI solo ve la vista del HMI. Un atacante externo necesitaría ARP spoofing, un puerto espejo o comprometer un host. |
+| **Relación con el escenario** | Modbus/TCP viaja en texto claro por el puerto 502. En el laboratorio, el módulo de captura comparte el namespace del PLC y ve las peticiones y respuestas de ambos clientes. Un atacante externo necesitaría ARP spoofing, un puerto espejo o comprometer un host. |
 | **Evidencias** | PCAP con peticiones y respuestas FC3/FC4/FC6; presencia de un host no inventariado; interfaz en promiscuo; ARP anómalo; aumento de tráfico. |
 | **Consecuencias** | Pérdida de confidencialidad; el atacante obtiene el mapa de registros y las consignas; habilita T0861, T0836 y T0830. |
-| **Demostración** | Captura con `docker compose exec plc tcpdump -i eth0 -s 0 -w ... 'tcp port 502'`; se muestran los valores de nivel, temperatura y consigna. |
-| **Limitaciones** | La captura en el PLC es un punto de observación privilegiado, no un atacante externo. En una red bridge de Docker, el tráfico unicast no se difunde a todos los contenedores. Si se afirma sniffing externo, debe demostrarse con ARP spoofing, un proxy o un mirror. |
+| **Demostración** | Captura con `docker compose -f capture/compose.yml exec capture sh /app/capture.sh /captures/01_baseline.pcapng`; se muestran los valores de nivel, temperatura y consigna. |
+| **Limitaciones** | El módulo de captura en el namespace del PLC es un punto de observación privilegiado, no un atacante externo. En una red bridge de Docker, el tráfico unicast no se difunde a todos los contenedores. Si se afirma sniffing externo, debe demostrarse con ARP spoofing, un proxy o un mirror. |
 | **Fuente** | MITRE ATT&CK for ICS, T0842, consultado el [fecha], https://attack.mitre.org/techniques/T0842/ |
 
 #### Ficha T0861 — Point & Tag Identification
@@ -2103,7 +2115,7 @@ Get-FileHash evidencias\pcaps\*.pcapng -Algorithm SHA256 | Format-List
 |---|---|---|
 | El HMI no conecta | Timeout, logs de error | Healthcheck, reintentos, revisar IP/puerto |
 | El puerto 502 está ocupado | `port is already allocated` | No publicar 502; mapear 1502 |
-| El PCAP no contiene tráfico | Solo ARP/broadcast | Capturar en el PLC (ve todo) o en el sidecar del HMI (solo HMI); si hace falta, ARP spoofing |
+| El PCAP no contiene tráfico | Solo ARP/broadcast | Iniciar el módulo `capture` (comparte la red del PLC y ve ambos clientes); si hace falta, ARP spoofing |
 | ARP spoofing falla | El tráfico no pasa por el atacante | Proxy TCP o VMs; documentar limitación |
 | PyModbus cambia | ImportError/API distinta | Versión fijada 3.7.4 |
 | El PLC se cae por DoS | Sin respuesta | Reiniciar; limitar duración; no usar en producción |
@@ -2339,28 +2351,28 @@ modbus.exception_code
 ### Anexo D — Comandos del starter kit
 
 ```bash
-# Arranque
+# Arranque modular
 cd starter_modbus
-docker compose up -d --build
+sh docker_composer up
 
 # Logs
-docker compose logs -f plc
-docker compose logs -f hmi
+docker compose -f plc/compose.yml logs -f plc
+docker compose -f hmi/compose.yml logs -f hmi
 
 # HMI en modo operación (genera FC5/FC6)
-docker compose exec hmi python hmi_client.py --host plc --operate
+docker compose -f hmi/compose.yml exec hmi python hmi_client.py --host plc --operate
 
-# Captura en el PLC (ve HMI y atacante)
-docker compose exec plc tcpdump -i eth0 -s 0 -w /app/captures/01_baseline.pcapng 'tcp port 502'
+# Captura en el namespace del PLC (ve HMI y atacante)
+docker compose -f capture/compose.yml exec capture sh /app/capture.sh /captures/01_baseline.pcapng
 
 # Escritura no autorizada
-docker compose exec attacker python attack_write.py --host plc --setpoint 95 --pump on --read
+docker compose -f attacker/compose.yml exec attacker python attack_write.py --host plc --setpoint 95 --pump on --read
 
 # Restauración
-docker compose exec attacker python attack_write.py --host plc --setpoint 60 --pump off
+docker compose -f attacker/compose.yml exec attacker python attack_write.py --host plc --setpoint 60 --pump off
 
 # Parada
-docker compose down
+sh docker_composer down
 ```
 
 ### Anexo E — Glosario

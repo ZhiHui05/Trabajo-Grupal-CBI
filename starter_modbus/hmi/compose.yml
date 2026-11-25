@@ -1,0 +1,22 @@
+name: cbi-modbus-hmi
+
+services:
+  hmi:
+    build:
+      context: ..
+      dockerfile: hmi/Dockerfile
+    container_name: cbi-hmi
+    working_dir: /app
+    command: python hmi_client.py --host plc
+    volumes:
+      - ./:/app:ro
+      - ../modbus_map.py:/app/modbus_map.py:ro
+    networks:
+      ics_net:
+        ipv4_address: ${HMI_IP:-172.28.0.11}
+    restart: unless-stopped
+
+networks:
+  ics_net:
+    external: true
+    name: cbi-modbus-ics

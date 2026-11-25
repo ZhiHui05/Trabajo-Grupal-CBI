@@ -1,0 +1,34 @@
+name: cbi-modbus-plc
+
+services:
+  plc:
+    build:
+      context: ..
+      dockerfile: plc/Dockerfile
+    container_name: cbi-plc
+    working_dir: /app
+    command: python plc_server.py
+    volumes:
+      - ./:/app:ro
+      - ../modbus_map.py:/app/modbus_map.py:ro
+    networks:
+      ics_net:
+        ipv4_address: ${PLC_IP:-172.28.0.10}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import socket; s=socket.create_connection(('127.0.0.1',502),2); s.close()",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    restart: unless-stopped
+
+networks:
+  ics_net:
+    external: true
+    name: cbi-modbus-ics

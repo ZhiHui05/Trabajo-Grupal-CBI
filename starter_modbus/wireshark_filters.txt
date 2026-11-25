@@ -21,6 +21,7 @@ modbus.func_code >= 128
 modbus.exception_code
 
 # --- Participantes ---
+# Direcciones predeterminadas; actualiza los filtros si se configuran otras IP.
 ip.addr == 172.28.0.10
 ip.addr == 172.28.0.11
 ip.addr == 172.28.0.66

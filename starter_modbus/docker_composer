@@ -1,0 +1,74 @@
+#!/usr/bin/env sh
+set -eu
+
+NETWORK="cbi-modbus-ics"
+NETWORK_SUBNET="${NETWORK_SUBNET:-172.28.0.0/24}"
+ACTION="${1:-up}"
+CONTAINER_CLI="${CONTAINER_CLI:-docker}"
+ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+cd "$ROOT_DIR"
+MODULES="plc hmi capture attacker"
+
+compose() {
+    module="$1"
+    shift
+    "$CONTAINER_CLI" compose -f "$module/compose.yml" "$@"
+}
+
+ensure_network() {
+    if ! "$CONTAINER_CLI" network inspect "$NETWORK" >/dev/null 2>&1; then
+        "$CONTAINER_CLI" network create --driver bridge --subnet "$NETWORK_SUBNET" "$NETWORK"
+    fi
+}
+
+wait_for_plc() {
+    attempt=0
+    while [ "$attempt" -lt 30 ]; do
+        if [ "$("$CONTAINER_CLI" inspect --format '{{.State.Health.Status}}' cbi-plc 2>/dev/null || true)" = "healthy" ]; then
+            return
+        fi
+        attempt=$((attempt + 1))
+        sleep 2
+    done
+    echo "PLC did not become healthy within 60 seconds." >&2
+    exit 1
+}
+
+case "$ACTION" in
+    up)
+        ensure_network
+        compose plc up -d --build
+        wait_for_plc
+        for module in hmi capture attacker; do
+            compose "$module" up -d --build
+        done
+        ;;
+    down)
+        for module in attacker capture hmi plc; do
+            compose "$module" down
+        done
+        ;;
+    clean)
+        for module in attacker capture hmi plc; do
+            compose "$module" down --rmi local --volumes
+        done
+        if "$CONTAINER_CLI" network inspect "$NETWORK" >/dev/null 2>&1; then
+            "$CONTAINER_CLI" network rm "$NETWORK"
+        fi
+        ;;
+    status)
+        for module in $MODULES; do
+            compose "$module" ps
+        done
+        ;;
+    build)
+        ensure_network
+        for module in $MODULES; do
+            compose "$module" build
+        done
+        ;;
+    *)
+        echo "Uso: ./docker_composer {up|down|clean|status|build}"
+        exit 2
+        ;;
+esac

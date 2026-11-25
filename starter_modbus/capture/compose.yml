@@ -1,0 +1,17 @@
+name: cbi-modbus-capture
+
+services:
+  capture:
+    build:
+      context: ..
+      dockerfile: capture/Dockerfile
+    container_name: cbi-capture
+    working_dir: /app
+    command: sleep infinity
+    volumes:
+      - ./captures:/captures
+    network_mode: container:cbi-plc
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    restart: unless-stopped

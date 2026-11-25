@@ -1,6 +1,6 @@
-captures/*.pcap
-captures/*.pcapng
-!captures/.gitkeep
+capture/captures/*.pcap
+capture/captures/*.pcapng
+!capture/captures/.gitkeep
 __pycache__/
 *.pyc
 .venv/

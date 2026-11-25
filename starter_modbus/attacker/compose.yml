@@ -1,0 +1,25 @@
+name: cbi-modbus-attacker
+
+services:
+  attacker:
+    build:
+      context: ..
+      dockerfile: attacker/Dockerfile
+    container_name: cbi-attacker
+    working_dir: /app
+    command: sleep infinity
+    volumes:
+      - ./:/app:ro
+      - ../modbus_map.py:/app/modbus_map.py:ro
+    networks:
+      ics_net:
+        ipv4_address: ${ATTACKER_IP:-172.28.0.66}
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    restart: unless-stopped
+
+networks:
+  ics_net:
+    external: true
+    name: cbi-modbus-ics

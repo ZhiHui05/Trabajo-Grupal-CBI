@@ -26,7 +26,7 @@ Laboratorio mínimo, reproducible y **deliberadamente inseguro** para el trabajo
 ## Arranque rápido
 
 ```bash
-cd starter_modbus
+cd laboratorio
 docker compose up -d --build
 docker compose ps
 docker compose logs -f plc
@@ -57,7 +57,7 @@ docker compose exec plc tcpdump -i eth0 -s 0 -w /app/captures/01_baseline.pcapng
 
 También existe el servicio `capture`, que comparte el namespace del HMI y sirve para ver la perspectiva del HMI. **No ve el tráfico del atacante** (es otro contenedor y otro namespace), así que no lo uses como única fuente para la escritura no autorizada.
 
-Los PCAP quedan en `starter_modbus/captures/`.
+Los PCAP quedan en `laboratorio/captures/` (Git los ignora). Copia a `evidencias/pcaps/` los que cites en la memoria y regístralos en `evidencias/MANIFEST.md`.
 
 ## Provocar una escritura no autorizada
 

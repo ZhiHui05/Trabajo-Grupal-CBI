@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# Salida generada de la memoria (se regenera con informe/build.ps1 o build.sh)
+informe/build/
+
+# Paquete de entrega generado
+entrega/
+
+# Sistema / editores
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Las capturas de trabajo (laboratorio/captures/) se ignoran en laboratorio/.gitignore.
+# Las capturas elegidas como evidencia SÍ se versionan en evidencias/pcaps/.

@@ -489,7 +489,7 @@ No publiques el puerto 502 en el host salvo que lo necesites. En una planta real
 
 ### 5.4. Piezas del `compose.yml`
 
-El archivo completo está en `starter_modbus/compose.yml`. Los elementos que debes saber explicar:
+El archivo completo está en `laboratorio/compose.yml`. Los elementos que debes saber explicar:
 
 - **`build: .`**: una única imagen con Python, PyModbus, tcpdump y utilidades.
 - **`networks.ics_net`**: red bridge con subred `172.28.0.0/24`; IPs fijas para que el informe y las capturas coincidan.
@@ -518,7 +518,7 @@ Recomendación para el trabajo: usar la **captura en el PLC** para la evidencia 
 ### 5.6. Arranque y comprobaciones
 
 ```bash
-cd starter_modbus
+cd laboratorio
 docker compose up -d --build
 docker compose ps
 docker compose logs -f plc
@@ -2263,7 +2263,7 @@ En el código se usa `zero_mode=True`; por eso HR 0 = 40001. Si se usa `zero_mod
 
 ### Anexo B — Filtros de Wireshark
 
-Archivo completo: `starter_modbus/wireshark_filters.txt`.
+Archivo completo: `laboratorio/wireshark_filters.txt`.
 
 Filtros imprescindibles:
 
@@ -2340,7 +2340,7 @@ modbus.exception_code
 
 ```bash
 # Arranque
-cd starter_modbus
+cd laboratorio
 docker compose up -d --build
 
 # Logs

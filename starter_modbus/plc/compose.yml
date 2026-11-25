@@ -7,10 +7,12 @@ services:
       dockerfile: plc/Dockerfile
     container_name: cbi-plc
     working_dir: /app
-    command: python plc_server.py
+    command: python -m plc.plc_server
     volumes:
-      - ./:/app:ro
+      - ./:/app/plc:ro
       - ../modbus_map.py:/app/modbus_map.py:ro
+    environment:
+      PYTHONPATH: /app/plc:/app
     networks:
       ics_net:
         ipv4_address: ${PLC_IP:-172.28.0.10}

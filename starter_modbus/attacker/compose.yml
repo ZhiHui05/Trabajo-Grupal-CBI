@@ -9,7 +9,7 @@ services:
     working_dir: /app
     command: sleep infinity
     volumes:
-      - ./:/app:ro
+      - ./:/app/attacker:ro
       - ../modbus_map.py:/app/modbus_map.py:ro
     networks:
       ics_net:

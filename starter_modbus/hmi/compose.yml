@@ -7,9 +7,9 @@ services:
       dockerfile: hmi/Dockerfile
     container_name: cbi-hmi
     working_dir: /app
-    command: python hmi_client.py --host plc
+    command: python -m hmi.hmi_client --host plc
     volumes:
-      - ./:/app:ro
+      - ./:/app/hmi:ro
       - ../modbus_map.py:/app/modbus_map.py:ro
     networks:
       ics_net:

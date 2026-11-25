@@ -17,6 +17,7 @@ Laboratorio mínimo, reproducible y **deliberadamente inseguro** para el trabajo
 | `plc/process_model.py` | Modelo aislado de la simulación del proceso. |
 | `tests/` | Pruebas unitarias del modelo del proceso. |
 | `cambios.md` | Historial de modificaciones respecto al proyecto inicial. |
+| `PUESTA_EN_MARCHA.md` | Guía para iniciar cada contenedor por separado o todo el laboratorio. |
 | `lab.ps1` | Automatiza el ciclo completo en Windows PowerShell. |
 | `docker_composer` | Automatiza el ciclo completo en Linux/macOS o Podman. |
 | `wireshark_filters.txt` | Filtros y columnas recomendadas para Wireshark. |
@@ -95,7 +96,7 @@ docker compose -f hmi/compose.yml logs -f hmi
 El HMI arranca en modo monitor. Para generar tráfico de escritura (consigna y bomba), ejecuta un segundo proceso **dentro del mismo contenedor HMI**; el módulo de captura, conectado al namespace del PLC, también verá esas escrituras:
 
 ```bash
-docker compose -f hmi/compose.yml exec hmi python hmi_client.py --host plc --operate
+docker compose -f hmi/compose.yml exec hmi python -m hmi.hmi_client --host plc --operate
 ```
 
 Deténlo con `Ctrl+C` cuando termines la captura. Para el experimento de ataque, déjalo parado y usa solo el HMI en modo monitor.
@@ -118,13 +119,13 @@ Los PCAP quedan en `starter_modbus/capture/captures/`.
 Con el PLC y el HMI en marcha:
 
 ```bash
-docker compose -f attacker/compose.yml exec attacker python attack_write.py --host plc --setpoint 95 --pump on
+docker compose -f attacker/compose.yml exec attacker python -m attacker.attack_write --host plc --setpoint 95 --pump on
 ```
 
 Observa en los logs del HMI cómo cambia la consigna y cómo sube el nivel. Para restaurar:
 
 ```bash
-docker compose -f attacker/compose.yml exec attacker python attack_write.py --host plc --setpoint 60 --pump off
+docker compose -f attacker/compose.yml exec attacker python -m attacker.attack_write --host plc --setpoint 60 --pump off
 ```
 
 ## Parar y limpiar
@@ -159,6 +160,7 @@ En Windows PowerShell:
 
 | Síntoma | Causa probable | Solución |
 |---|---|---|
+| `failed to create mountpoint ... read-only file system` | El montaje de un módulo sobre `/app` oculta la ruta del mapa compartido | Usa los Compose incluidos: montan cada módulo bajo `/app/<módulo>` y el mapa por separado. |
 | `network cbi-modbus-ics not found` | La red compartida no fue creada | Ejecuta `sh docker_composer up` o `.\lab.ps1 up` para crearla. |
 | El HMI no conecta | PLC aún no listo | Espera a que el módulo PLC esté activo y revisa `docker compose -f plc/compose.yml logs plc`. |
 | `tcpdump: permission denied` | Faltan capacidades | El módulo `capture` incluye las capacidades necesarias (`NET_RAW` y `NET_ADMIN`). |

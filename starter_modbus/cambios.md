@@ -8,6 +8,9 @@
   que necesita y comparte el contexto de build raíz.
 - Se movieron los servidores y clientes a sus carpetas respectivas:
   `plc/plc_server.py`, `hmi/hmi_client.py`, `attacker/attack_write.py` y `capture/capture.sh`.
+- Se ajustaron los montajes de PLC, HMI y atacante para montar cada módulo bajo `/app/<módulo>`,
+  evitando que el montaje de solo lectura ocultara el destino del mapa Modbus compartido. Los
+  comandos Compose usan ahora la ejecución por módulos de Python.
 - Se trasladó la salida de capturas a `capture/captures/`.
 - Se añadieron `docker_composer` y `lab.ps1` para crear la red, esperar a que el PLC esté saludable,
   desplegar los módulos en orden, consultar su estado y detener/limpiar el laboratorio.
@@ -28,6 +31,9 @@
 - La red externa compartida mantiene valores predeterminados reproducibles y permite configurar
   `NETWORK_SUBNET`, `PLC_IP`, `HMI_IP` y `ATTACKER_IP` mediante variables de entorno.
 - La captura comparte el namespace de red del PLC para observar tráfico del HMI y del atacante.
+- Se añadió `capture/stream_capture.py` para transmitir paquetes Modbus en directo a Wireshark por
+  TCP. El puerto `15002` se publica únicamente en `127.0.0.1` y puede cambiarse con
+  `WIRESHARK_STREAM_PORT`.
 - PLC y HMI usan UID/GID no root (`10001:10001`) y montan su código en solo lectura.
 - Las capacidades de captura/red se mantienen en los módulos que las requieren; el PLC ya no
   necesita capacidades de captura.
@@ -39,8 +45,11 @@
 ## Pruebas y documentación
 
 - Se añadieron cinco pruebas unitarias estándar para el modelo del proceso: llenado y drenaje,
-  límites de nivel y velocidad, medidas de caudal/presión y alarma de nivel alto.
+  límites de nivel y velocidad, medidas de caudal/presión y alarma de nivel alto. Se añadió una
+  sexta prueba para comprobar la retransmisión del flujo PCAP.
 - Se actualizaron `README.md`, `00_Guia_Trabajo_Grupo.md` y `wireshark_filters.txt` para reflejar
   las rutas, comandos, estructura, valores de red predeterminados y configuración actuales.
+- Se añadió `PUESTA_EN_MARCHA.md` con instrucciones para iniciar cada contenedor y visualizar
+  tráfico en directo con Wireshark.
 - Se añadió en el README el comando para ejecutar las pruebas:
   `python -m unittest discover -s tests -v`.

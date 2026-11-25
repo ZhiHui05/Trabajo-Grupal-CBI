@@ -11,6 +11,8 @@ services:
     volumes:
       - ./:/app/plc:ro
       - ../modbus_map.py:/app/modbus_map.py:ro
+    ports:
+      - "127.0.0.1:${WIRESHARK_STREAM_PORT:-15002}:15002"
     environment:
       PYTHONPATH: /app/plc:/app
     networks:

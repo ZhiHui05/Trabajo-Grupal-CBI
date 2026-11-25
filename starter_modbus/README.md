@@ -84,7 +84,7 @@ En Linux/macOS, antepón esas variables a `sh docker_composer up`. Si ya existe 
 subred, elimina primero el laboratorio con `clean` y vuelve a levantarlo.
 
 ```bash
-NETWORK_SUBNET=172.29.0.0/24 PLC_IP=172.29.0.10 HMI_IP=172.29.0.11 ATTACKER_IP=172.29.0.66 sh docker_composer up
+NETWORK_SUBNET=172.29.0.0/24 PLC_IP=172.29.0.10 HMI_IP=172.29.0.11 ATTACKER_IP=172.29.0.66 sh docker_composer up 
 ```
 
 En otra terminal:
@@ -111,6 +111,7 @@ docker compose -f capture/compose.yml exec capture sh /app/capture.sh /captures/
 ```
 
 Los PCAP quedan en `starter_modbus/capture/captures/`.
+Para ver los paquetes en directo en Wireshark, sigue la sección de captura en directo de [PUESTA_EN_MARCHA.md](PUESTA_EN_MARCHA.md).
 
 ## Provocar una escritura no autorizada
 

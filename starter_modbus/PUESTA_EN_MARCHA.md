@@ -107,6 +107,28 @@ docker compose -f capture/compose.yml exec capture sh /app/capture.sh /captures/
 Detén la captura con `Ctrl+C`. Los archivos PCAP se guardan en
 `capture/captures/` en el equipo anfitrión.
 
+#### Ver la captura en directo con Wireshark
+
+El puerto TCP `15002` se publica solo en `127.0.0.1` del equipo anfitrión. Con
+el PLC y `capture` ya iniciados, ejecuta el retransmisor en una terminal WSL y
+déjalo en marcha:
+
+```sh
+docker compose -f capture/compose.yml exec capture python /app/stream_capture.py
+```
+
+En Windows PowerShell, abre Wireshark conectado a ese flujo:
+
+```powershell
+& "$env:ProgramFiles\Wireshark\Wireshark.exe" -k -i "TCP@127.0.0.1:15002" -Y "tcp.port == 502"
+```
+
+El filtro muestra el tráfico Modbus/TCP mientras llegan los paquetes. Al
+terminar, detén la captura desde Wireshark y pulsa `Ctrl+C` en la terminal WSL.
+Este flujo en directo no guarda un archivo automáticamente; usa **File > Save
+As** en Wireshark si quieres conservarlo. Para cambiar el puerto del anfitrión,
+define `WIRESHARK_STREAM_PORT` antes de iniciar el laboratorio.
+
 ### 4. Contenedor atacante
 
 Este contenedor se mantiene en espera para permitir ejecutar el cliente de

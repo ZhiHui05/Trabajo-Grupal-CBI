@@ -10,5 +10,6 @@ RUN apt-get update \
 WORKDIR /app
 
 COPY capture/capture.sh .
+COPY capture/stream_capture.py .
 
 CMD ["sleep", "infinity"]

@@ -37,23 +37,23 @@ Mínimo **dos técnicas**. Rellenad una fila por técnica y por requisito, o una
 
 | Requisito (por técnica) | Sección | Evidencia | Responsable | Estado |
 |---|---|---|---|---|
-| Identificador y nombre de la técnica | 5.2 | | | Pendiente |
-| Descripción del comportamiento del atacante | 5.3–5.6 | | | Pendiente |
-| Condiciones necesarias para que se produzca | 5.3–5.6 | | | Pendiente |
-| Relación con el protocolo o la arquitectura desplegada | 5.3–5.6 | | | Pendiente |
-| Posibles evidencias de su ejecución | 5.3–5.6 | PCAP + frames | | Pendiente |
-| Consecuencias potenciales para el proceso industrial | 5.3–5.6 | | | Pendiente |
-| Selección justificada (no solo enumerar técnicas) | 5.1 | | | Pendiente |
-| Distinguir **vulnerabilidad observada / ataque técnicamente posible / comportamiento demostrado** | 5.8 | | | Pendiente |
+| Identificador y nombre de la técnica | 5.2 | `05_mitre.md §5.2` | Zhihui Li | En curso |
+| Descripción del comportamiento del atacante | 5.3–5.6 | `05_mitre.md §5.3–5.6` | Zhihui Li | En curso |
+| Condiciones necesarias para que se produzca | 5.3–5.6 | `05_mitre.md §5.3–5.6` | Zhihui Li | En curso |
+| Relación con el protocolo o la arquitectura desplegada | 5.3–5.6 | `05_mitre.md §5.3–5.6; laboratorio/scan_recon.py` | Zhihui Li | En curso |
+| Posibles evidencias de su ejecución | 5.3–5.6 | `02_reconocimiento_*.pcapng y 03_escritura_setpoint_*.pcapng (frames en las fichas)` | Zhihui Li | En curso |
+| Consecuencias potenciales para el proceso industrial | 5.3–5.6 | `05_mitre.md §5.3–5.6` | Zhihui Li | En curso |
+| Selección justificada (no solo enumerar técnicas) | 5.1 | `05_mitre.md §5.1` | Zhihui Li | En curso |
+| Distinguir **vulnerabilidad observada / ataque técnicamente posible / comportamiento demostrado** | 5.8 | `05_mitre.md §5.8` | Zhihui Li | En curso |
 
 Estado de cada técnica candidata:
 
 | Técnica | Categoría (observada / posible / demostrada) | Script o experimento | PCAP + frames |
 |---|---|---|---|
-| T0842 Network Sniffing | | `capture.sh` | |
-| T0861 Point & Tag Identification | | *(falta script de reconocimiento)* | |
-| T0836 Modify Parameter | | `attack_write.py` | |
-| T0830 Adversary-in-the-Middle | | *(opcional)* | |
+| T0842 Network Sniffing | Demostrada | `capture.sh` / `tcpdump` | `01_baseline_*.pcapng` |
+| T0861 Point & Tag Identification | Demostrada/parcial | `scan_recon.py` | `02_reconocimiento_*.pcapng` |
+| T0836 Modify Parameter | Demostrada | `attack_write.py` | `03_escritura_setpoint_*.pcapng` |
+| T0830 Adversary-in-the-Middle | Posible (no reproducida en Docker) | intento con ARP spoofing/proxy | `04_mitm_arp_*.pcapng` (si se reproduce) |
 
 ## 4.4 Análisis del impacto sobre el proceso (25 %) — `06_impacto.md`
 

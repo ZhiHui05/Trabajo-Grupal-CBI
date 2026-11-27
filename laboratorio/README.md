@@ -13,6 +13,7 @@ Laboratorio mínimo, reproducible y **deliberadamente inseguro** para el trabajo
 | `plc_server.py` | PLC virtual Modbus/TCP con simulación de nivel, temperatura, bomba y alarmas. |
 | `hmi_client.py` | HMI/SCADA que consulta variables y, opcionalmente, escribe consignas y comandos. |
 | `attack_write.py` | Cliente Modbus que escribe una consigna y/o fuerza la bomba (demostración de escritura no autorizada). |
+| `scan_recon.py` | Reconocimiento Modbus/TCP (T0861): sondea Unit IDs, lee el mapa de registros y genera CSV/Markdown. |
 | `capture.sh` | Ayuda para capturar tráfico con tcpdump dentro de un contenedor (PLC o `capture`). |
 | `wireshark_filters.txt` | Filtros y columnas recomendadas para Wireshark. |
 
@@ -58,6 +59,54 @@ docker compose exec plc tcpdump -i eth0 -s 0 -w /app/captures/01_baseline.pcapng
 También existe el servicio `capture`, que comparte el namespace del HMI y sirve para ver la perspectiva del HMI. **No ve el tráfico del atacante** (es otro contenedor y otro namespace), así que no lo uses como única fuente para la escritura no autorizada.
 
 Los PCAP quedan en `laboratorio/captures/` (Git los ignora). Copia a `evidencias/pcaps/` los que cites en la memoria y regístralos en `evidencias/MANIFEST.md`.
+
+## Reconocimiento (T0861)
+
+Objetivo: demostrar cómo un cliente **sin credenciales** identifica el PLC, el Unit ID accesible y el mapa de registros (T0861, *Point & Tag Identification*). El script solo **lee**: no escribe coils ni registros.
+
+Deja la captura en marcha en el contenedor del PLC, en otra terminal:
+
+```bash
+docker compose exec plc tcpdump -i eth0 -s 0 -w /app/captures/02_reconocimiento.pcapng 'tcp port 502'
+```
+
+Ejecuta el reconocimiento desde el contenedor atacante:
+
+```bash
+docker compose exec attacker python scan_recon.py --host plc
+```
+
+Qué hace:
+
+- Comprueba que `502/tcp` está abierto y mide la latencia de conexión.
+- Sondea los Unit IDs indicados en `--units` (por defecto `0-5,247`) leyendo HR 0 en cada uno.
+- Con el primer Unit ID que responde, lee HR 0–11 **una a una** (pausa `--delay`, 0,15 s por defecto) y después CO 0–1, DI 0 e IR 0–1.
+- Consulta HR 32 (`--probe-addr`) para forzar la excepción 0x02 (Illegal Data Address) y delimitar el bloque de direcciones válido.
+- Genera en `--out-dir` (`.` por defecto) un `recon_<host>_<AAAAMMDD_HHMMSS>.csv` (UTF-8 con BOM, separador `;`) y un `.md` con la misma tabla.
+
+> El contenedor `attacker` monta `./:/app`, así que `.` es `laboratorio/` en el host y los ficheros aparecen ahí directamente. Si prefieres dejarlos junto a los PCAP, usa `--out-dir /app/captures`; el `.gitignore` ya excluye `recon_*.csv` y `recon_*.md`.
+
+| Opción | Por defecto | Uso |
+|---|---|---|
+| `--host` | `plc` | Host o IP del PLC. |
+| `--port` | `502` | Puerto TCP de Modbus. |
+| `--units` | `0-5,247` | Unit IDs a sondear (admite rangos y listas). |
+| `--hr-count` | `12` | Holding registers a leer desde HR 0. |
+| `--delay` | `0.15` | Pausa entre lecturas (s) para que el sondeo se vea en el PCAP. |
+| `--probe-addr` | `32` | HR fuera del mapa para forzar la excepción. |
+| `--timeout` | `1.5` | Timeout de conexión y de respuesta (s). |
+| `--out-dir` | `.` | Directorio donde dejar el CSV y el Markdown. |
+| `--raw` | desactivado | No usa el mapa conocido: muestra solo direcciones y valores crudos. |
+
+Resultado esperado:
+
+- Solo responde el Unit ID **1**; el resto devuelve excepción 0x0B (Gateway Target Failed to Respond).
+- HR 0–3 corresponden a nivel, temperatura, consigna de nivel y consigna de velocidad, con la escala del [mapa de registros](#mapa-de-registros).
+- HR 4–11 responden 0: el bloque tiene 32 posiciones y solo se usan las cuatro primeras.
+- HR 32 devuelve excepción 0x02 (Illegal Data Address).
+- El patrón es distinto al del HMI, que lee bloques de 4 registros cada segundo: aquí son lecturas individuales de 1 registro espaciadas ~0,15 s.
+
+> **Nota:** los nombres de variable (`LT-101`, `TT-101`, etc.) son inferidos a partir del mapa del laboratorio. Modbus solo transporta direcciones y valores crudos; el significado se deduce del contexto y de la documentación del proceso.
 
 ## Provocar una escritura no autorizada
 

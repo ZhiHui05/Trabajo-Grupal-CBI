@@ -5,3 +5,6 @@ __pycache__/
 *.pyc
 .venv/
 .env
+# Salidas generadas por scan_recon.py
+recon_*.csv
+recon_*.md

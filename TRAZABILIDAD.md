@@ -9,13 +9,13 @@ Estado: `Pendiente` · `En curso` · `Revisión` · `Hecho`
 
 | Requisito | Sección | Evidencia | Responsable | Estado |
 |---|---|---|---|---|
-| Dispositivos o aplicaciones que participan y su función | 2.2 | | | Pendiente |
-| Protocolo utilizado y sus características principales | 2.3 | | | Pendiente |
-| Variables de proceso intercambiadas (qué representa cada una) | 2.4 | `laboratorio/README.md` (mapa de registros) | | Pendiente |
-| Operaciones: lectura, escritura, etc. | 2.5 | | | Pendiente |
-| Esquema sencillo de la arquitectura y de las comunicaciones | 2.6 | `informe/figuras/` | | Pendiente |
-| Cómo podría usarse este escenario en una planta industrial real | 2.7 | | | Pendiente |
-| Consecuencias de manipular cada variable (enunciado, 3) | 2.4 | | | Pendiente |
+| Dispositivos o aplicaciones que participan y su función | 2.2 | | Luis Roberto | Revisión |
+| Protocolo utilizado y sus características principales | 2.3 | | Luis Roberto | Revisión |
+| Variables de proceso intercambiadas (qué representa cada una) | 2.4 | `laboratorio/README.md` (mapa de registros) | Luis Roberto | Revisión |
+| Operaciones: lectura, escritura, etc. | 2.5 | | Luis Roberto | Revisión |
+| Esquema sencillo de la arquitectura y de las comunicaciones | 2.6 | `informe/figuras/` | Luis Roberto | Revisión |
+| Cómo podría usarse este escenario en una planta industrial real | 2.7 | | Luis Roberto | Revisión |
+| Consecuencias de manipular cada variable (enunciado, 3) | 2.4 | | Luis Roberto | Revisión |
 
 ## 4.2 Despliegue y análisis del tráfico (25 %) — `03_despliegue.md`, `04_trafico.md`
 
@@ -59,12 +59,12 @@ Estado de cada técnica candidata:
 
 | Requisito | Sección | Evidencia | Responsable | Estado |
 |---|---|---|---|---|
-| Amenaza más relevante seleccionada | 6.1 | | | Pendiente |
-| Escenario hipotético de ataque: cómo actuaría el atacante | 6.2 | | | Pendiente |
-| Condiciones necesarias | 6.3 | | | Pendiente |
-| Efectos sobre el funcionamiento de la instalación | 6.4 | | | Pendiente |
-| Consecuencias: disponibilidad, integridad de variables, continuidad, calidad, seguridad del proceso | 6.4–6.5 | | | Pendiente |
-| Justificación conjunta de por qué es la amenaza prioritaria | 6.6 | | | Pendiente |
+| Amenaza más relevante seleccionada | 6.1 | | Luis Roberto | Revisión |
+| Escenario hipotético de ataque: cómo actuaría el atacante | 6.2 | | Luis Roberto | Revisión |
+| Condiciones necesarias | 6.3 | | Luis Roberto | Revisión |
+| Efectos sobre el funcionamiento de la instalación | 6.4 | | Luis Roberto | Revisión |
+| Consecuencias: disponibilidad, integridad de variables, continuidad, calidad, seguridad del proceso | 6.4–6.5 | | Luis Roberto | Revisión |
+| Justificación conjunta de por qué es la amenaza prioritaria | 6.6 | | Luis Roberto | Revisión |
 
 ## 5. Actividad voluntaria: incidente real (15 %) — `08_incidente_real.md`
 

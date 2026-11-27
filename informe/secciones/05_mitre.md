@@ -24,7 +24,7 @@ Las capturas citadas en este capítulo se realizaron el 27/11/2026 y los nombres
 
 | ID | Técnica | Táctica | Relación con el escenario | Nivel | Evidencia |
 |---|---|---|---|---|---|
-| T0842 | Network Sniffing | Discovery | Modbus/TCP en texto claro; captura en el PLC y *sidecar* del HMI | Demostrada | `01_baseline_20261127.pcapng`, frames 1–9 y 264–270 |
+| T0842 | Network Sniffing | Discovery | Modbus/TCP en texto claro; captura en el PLC y *sidecar* del HMI | Demostrada | `01_baseline_20261127.pcapng`, frames 1–9 |
 | T0861 | Point & Tag Identification | Collection | Sondeo de Unit IDs y lectura secuencial de HR 0–11; inferencia del mapa | Demostrada/parcial | `02_reconocimiento_20261127.pcapng`, frames 300–369 y 398; `scan_recon.py` |
 | T0830 | Adversary-in-the-Middle | Collection | ARP spoofing o proxy TCP entre HMI y PLC | Posible (no reproducida) | No se generó PCAP; ver §5.6 |
 | T0836 | Modify Parameter | Impair Process Control | Escritura FC6 de la consigna de nivel (HR 2) | Demostrada | `03_escritura_setpoint_20261127.pcapng`, frames 284–291, 954 y 959 |
@@ -43,9 +43,9 @@ Las capturas citadas en este capítulo se realizaron el 27/11/2026 y los nombres
 | **Descripción** | El adversario captura tráfico de la red industrial para obtener topología, direcciones, protocolos y valores del proceso. En Modbus/TCP no necesita romper ningún cifrado: las peticiones y respuestas se leen directamente. |
 | **Condiciones** | Acceso a la red o a un punto de captura (interfaz en modo promiscuo, SPAN/mirror o *host* comprometido); tráfico sin cifrar; capacidad de ejecutar `tcpdump` o Wireshark; conocer la interfaz y el filtro adecuado. |
 | **Relación con el escenario** | El PLC (`172.28.0.10`) y el HMI (`172.28.0.11`) se comunican por `eth0` en la red `ics_net` con Modbus/TCP. La captura realizada en el PLC ve todas las peticiones y respuestas porque todo el tráfico termina en él. El servicio `capture`, que comparte el *namespace* del HMI, solo ve la perspectiva del HMI y no el tráfico del atacante. |
-| **Evidencias** | PCAP `01_baseline_20261127.pcapng`, frames 1–9 y 264–270: sesión TCP hacia el puerto 502, peticiones FC3/FC4/FC2/FC1 y respuestas con nivel, temperatura, consigna, velocidad, caudal y presión en claro. Los frames 264, 268 y 270 contienen las escrituras legítimas del HMI (consigna 60 %, velocidad 1450 rpm y bomba ON). Ausencia de TLS o de cualquier campo de autenticación en la PDU. |
+| **Evidencias** | PCAP `01_baseline_20261127.pcapng`, frames 1–9: sesión TCP hacia el puerto 502, peticiones FC3/FC4/FC2/FC1 y respuestas con nivel, temperatura, consigna, velocidad, caudal y presión en claro. La captura contiene 46 ciclos de sondeo idénticos y ninguna escritura. Ausencia de TLS o de cualquier campo de autenticación en la PDU. |
 | **Consecuencias** | Pérdida de confidencialidad: el adversario obtiene el mapa de variables, las consignas y el comportamiento del lazo. Es un habilitador directo de T0861, T0836 y T0830. |
-| **Demostración** | `docker compose exec plc tcpdump -i eth0 -s 0 -w /app/captures/01_baseline_20261127.pcapng 'tcp port 502'`, con el HMI en modo monitor y un segundo HMI en modo `--operate` durante 55 s para generar FC6/FC5. El análisis en Wireshark con el filtro `modbus` permite identificar las peticiones FC3/FC4 y los valores de proceso (frames 1–9). |
+| **Demostración** | `docker compose exec plc tcpdump -i eth0 -s 0 -w /app/captures/01_baseline_20261127.pcapng 'tcp port 502'`, con el HMI en modo monitor durante 45 s (460 paquetes). El análisis en Wireshark con el filtro `modbus` permite identificar las peticiones FC3/FC4 y los valores de proceso (frames 1–9). |
 | **Limitaciones** | La captura en el PLC es un punto de observación privilegiado, no la posición de un atacante externo. En una red *bridge* de Docker el tráfico *unicast* no se difunde a todos los contenedores; para afirmar *sniffing* externo habría que demostrarlo con ARP spoofing, un proxy o un puerto espejo, y eso se trata en T0830. |
 | **Fuente** | MITRE ATT&CK for ICS, *T0842 Network Sniffing*, consultado el 27/11/2026, https://attack.mitre.org/techniques/T0842/ |
 

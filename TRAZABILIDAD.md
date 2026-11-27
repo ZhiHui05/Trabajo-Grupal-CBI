@@ -50,7 +50,7 @@ Estado de cada técnica candidata:
 
 | Técnica | Categoría (observada / posible / demostrada) | Script o experimento | PCAP + frames |
 |---|---|---|---|
-| T0842 Network Sniffing | Demostrada | `capture.sh` / `tcpdump` | `01_baseline_20261127.pcapng`, frames 1–9 y 264–270 |
+| T0842 Network Sniffing | Demostrada | `capture.sh` / `tcpdump` | `01_baseline_20261127.pcapng`, frames 1–9 |
 | T0861 Point & Tag Identification | Demostrada/parcial | `scan_recon.py` | `02_reconocimiento_20261127.pcapng`, frames 300–369 y 398 |
 | T0836 Modify Parameter | Demostrada | `attack_write.py` | `03_escritura_setpoint_20261127.pcapng`, frames 284–291, 954 y 959 |
 | T0830 Adversary-in-the-Middle | Posible (no reproducida en Docker) | intento con ARP spoofing/proxy | Sin PCAP |

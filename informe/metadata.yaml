@@ -4,8 +4,12 @@ subtitle: "Ciberseguridad Industrial · GIIROB · Curso 2026/27"
 lang: es-ES
 toc-title: "Índice"
 geometry: margin=2.5cm
+monofont: "Consolas"
 header-includes: |
   \usepackage{amssymb}
   \usepackage{newunicodechar}
   \newunicodechar{☐}{\ensuremath{\square}}
+  \newunicodechar{▶}{\ensuremath{\blacktriangleright}}
+  \newunicodechar{≥}{\ensuremath{\geq}}
+  \newunicodechar{≤}{\ensuremath{\leq}}
 ---

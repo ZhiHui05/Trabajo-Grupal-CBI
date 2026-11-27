@@ -1,0 +1,20 @@
+<<<<<<< HEAD:starter_modbus/.gitignore
+capture/captures/*.pcap
+capture/captures/*.pcapng
+!capture/captures/.gitkeep
+__pycache__/
+*.pyc
+.venv/
+.env
+=======
+captures/*.pcap
+captures/*.pcapng
+!captures/.gitkeep
+__pycache__/
+*.pyc
+.venv/
+.env
+# Salidas generadas por scan_recon.py
+recon_*.csv
+recon_*.md
+>>>>>>> docs/mitre:laboratorio/.gitignore

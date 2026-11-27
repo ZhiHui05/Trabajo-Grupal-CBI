@@ -1,0 +1,13 @@
+# Finales de línea LF para todo el texto, también en Windows.
+# Evita que capture.sh u otros scripts lleguen con CRLF al contenedor Linux
+# (el laboratorio monta la carpeta como volumen) y fallen con "set: illegal option".
+* text=auto eol=lf
+
+*.ps1 text eol=crlf
+
+*.pcap binary
+*.pcapng binary
+*.png binary
+*.jpg binary
+*.pdf binary
+*.docx binary

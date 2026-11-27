@@ -1,12 +1,8 @@
-<<<<<<< HEAD:starter_modbus/.gitignore
+# Capturas del laboratorio modular (capture/compose.yml)
 capture/captures/*.pcap
 capture/captures/*.pcapng
 !capture/captures/.gitkeep
-__pycache__/
-*.pyc
-.venv/
-.env
-=======
+# Capturas del compose.yml único
 captures/*.pcap
 captures/*.pcapng
 !captures/.gitkeep
@@ -17,4 +13,3 @@ __pycache__/
 # Salidas generadas por scan_recon.py
 recon_*.csv
 recon_*.md
->>>>>>> docs/mitre:laboratorio/.gitignore

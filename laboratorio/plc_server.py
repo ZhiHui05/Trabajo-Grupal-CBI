@@ -39,7 +39,7 @@ from modbus_map import (
     IR_FLOW,
     IR_PRESSURE,
 )
-from process_model import Process
+from plc.process_model import Process
 
 LOG = logging.getLogger("plc")
 logging.basicConfig(

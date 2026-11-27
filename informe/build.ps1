@@ -22,14 +22,24 @@ $comunes = @(
 
 $engine = @('xelatex', 'lualatex', 'pdflatex') | Where-Object { Get-Command $_ -ErrorAction SilentlyContinue } | Select-Object -First 1
 
-if ($engine) {
-    $destino = Join-Path $out 'Memoria_Grupo_CBI.pdf'
-    & pandoc @secciones @comunes "--pdf-engine=$engine" '-o' $destino
-} else {
-    $destino = Join-Path $out 'Memoria_Grupo_CBI.docx'
-    Write-Warning 'No hay motor LaTeX (xelatex/lualatex/pdflatex): se genera .docx. Exportalo a PDF desde Word.'
-    & pandoc @secciones @comunes '-o' $destino
+# pandoc y LaTeX escriben avisos por stderr (por ejemplo, glifos que faltan en
+# la fuente). Con ErrorActionPreference=Stop eso abortaria la compilacion, asi
+# que se desactiva solo durante la llamada y se comprueba el codigo de salida.
+$anterior = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
+try {
+    if ($engine) {
+        $destino = Join-Path $out 'Memoria_Grupo_CBI.pdf'
+        & pandoc @secciones @comunes "--pdf-engine=$engine" '-o' $destino
+    } else {
+        $destino = Join-Path $out 'Memoria_Grupo_CBI.docx'
+        Write-Warning 'No hay motor LaTeX (xelatex/lualatex/pdflatex): se genera .docx. Exportalo a PDF desde Word.'
+        & pandoc @secciones @comunes '-o' $destino
+    }
+    $codigo = $LASTEXITCODE
+} finally {
+    $ErrorActionPreference = $anterior
 }
 
-if ($LASTEXITCODE -ne 0) { throw "pandoc termino con codigo $LASTEXITCODE" }
+if ($codigo -ne 0) { throw "pandoc termino con codigo $codigo" }
 Write-Host "Memoria generada: $destino"

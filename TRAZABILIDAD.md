@@ -37,23 +37,23 @@ Mínimo **dos técnicas**. Rellenad una fila por técnica y por requisito, o una
 
 | Requisito (por técnica) | Sección | Evidencia | Responsable | Estado |
 |---|---|---|---|---|
-| Identificador y nombre de la técnica | 5.2 | `05_mitre.md §5.2` | Zhihui Li | En curso |
-| Descripción del comportamiento del atacante | 5.3–5.6 | `05_mitre.md §5.3–5.6` | Zhihui Li | En curso |
-| Condiciones necesarias para que se produzca | 5.3–5.6 | `05_mitre.md §5.3–5.6` | Zhihui Li | En curso |
-| Relación con el protocolo o la arquitectura desplegada | 5.3–5.6 | `05_mitre.md §5.3–5.6; laboratorio/scan_recon.py` | Zhihui Li | En curso |
-| Posibles evidencias de su ejecución | 5.3–5.6 | `02_reconocimiento_*.pcapng y 03_escritura_setpoint_*.pcapng (frames en las fichas)` | Zhihui Li | En curso |
-| Consecuencias potenciales para el proceso industrial | 5.3–5.6 | `05_mitre.md §5.3–5.6` | Zhihui Li | En curso |
-| Selección justificada (no solo enumerar técnicas) | 5.1 | `05_mitre.md §5.1` | Zhihui Li | En curso |
-| Distinguir **vulnerabilidad observada / ataque técnicamente posible / comportamiento demostrado** | 5.8 | `05_mitre.md §5.8` | Zhihui Li | En curso |
+| Identificador y nombre de la técnica | 5.2 | `05_mitre.md §5.2` | Zhihui Li | Hecho |
+| Descripción del comportamiento del atacante | 5.3–5.6 | `05_mitre.md §5.3–5.6` | Zhihui Li | Hecho |
+| Condiciones necesarias para que se produzca | 5.3–5.6 | `05_mitre.md §5.3–5.6` | Zhihui Li | Hecho |
+| Relación con el protocolo o la arquitectura desplegada | 5.3–5.6 | `05_mitre.md §5.3–5.6; laboratorio/scan_recon.py` | Zhihui Li | Hecho |
+| Posibles evidencias de su ejecución | 5.3–5.6 | `02_reconocimiento_*.pcapng y 03_escritura_setpoint_*.pcapng (frames en las fichas)` | Zhihui Li | Hecho |
+| Consecuencias potenciales para el proceso industrial | 5.3–5.6 | `05_mitre.md §5.3–5.6` | Zhihui Li | Hecho |
+| Selección justificada (no solo enumerar técnicas) | 5.1 | `05_mitre.md §5.1` | Zhihui Li | Hecho |
+| Distinguir **vulnerabilidad observada / ataque técnicamente posible / comportamiento demostrado** | 5.8 | `05_mitre.md §5.8` | Zhihui Li | Hecho |
 
 Estado de cada técnica candidata:
 
 | Técnica | Categoría (observada / posible / demostrada) | Script o experimento | PCAP + frames |
 |---|---|---|---|
-| T0842 Network Sniffing | Demostrada | `capture.sh` / `tcpdump` | `01_baseline_*.pcapng` |
-| T0861 Point & Tag Identification | Demostrada/parcial | `scan_recon.py` | `02_reconocimiento_*.pcapng` |
-| T0836 Modify Parameter | Demostrada | `attack_write.py` | `03_escritura_setpoint_*.pcapng` |
-| T0830 Adversary-in-the-Middle | Posible (no reproducida en Docker) | intento con ARP spoofing/proxy | `04_mitm_arp_*.pcapng` (si se reproduce) |
+| T0842 Network Sniffing | Demostrada | `capture.sh` / `tcpdump` | `01_baseline_20261127.pcapng`, frames 1–9 y 264–270 |
+| T0861 Point & Tag Identification | Demostrada/parcial | `scan_recon.py` | `02_reconocimiento_20261127.pcapng`, frames 300–369 y 398 |
+| T0836 Modify Parameter | Demostrada | `attack_write.py` | `03_escritura_setpoint_20261127.pcapng`, frames 284–291, 954 y 959 |
+| T0830 Adversary-in-the-Middle | Posible (no reproducida en Docker) | intento con ARP spoofing/proxy | Sin PCAP |
 
 ## 4.4 Análisis del impacto sobre el proceso (25 %) — `06_impacto.md`
 
